@@ -1,15 +1,16 @@
-const datas = require('../src/data.js');
+const UserModel = require('../models/users.js');
+// const datas = require('../src/data.js');
 
 const getAllUsers = async (req, res) => {
-  //   console.log('data: ', datas);
-
   try {
-    res.status(200).json({
-      message: 'GET dummy data success.',
-      data: datas.users,
-    });
+    const [rows] = await UserModel.getAllUser();
+
+    res.json({ message: 'GET all user success.', data: rows });
   } catch (error) {
-    res.status(500).json({ message: error });
+    res.status(500).json({
+      message: 'Server Error',
+      serverMessage: error,
+    });
   }
 };
 
