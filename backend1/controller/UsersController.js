@@ -5,7 +5,7 @@ const getAllUsers = async (req, res) => {
   try {
     const [rows] = await UserModel.getAllUser();
 
-    res.json({ message: 'GET all user success.', data: rows });
+    res.json({ message: 'GET all users success.', data: rows });
   } catch (error) {
     res.status(500).json({
       message: 'Server Error',
