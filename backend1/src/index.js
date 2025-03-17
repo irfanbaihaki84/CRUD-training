@@ -1,18 +1,12 @@
 const express = require('express');
 require('dotenv').config();
-// const datas = require('./data.js');
-const mysql = require('mysql2');
 const UsersRoutes = require('../routes/UsersRoute');
-const port = 5000;
+const MiddlewareLogRequest = require('../middleware/log');
+const port = process.env.PORT || 7000;
 const app = express();
 
-// KONEKSI KE DATABASE
-const dbPool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
-  database: 'db_1',
-});
+// MIDDLEWARE
+app.use(MiddlewareLogRequest);
 
 app.use(express.json());
 
