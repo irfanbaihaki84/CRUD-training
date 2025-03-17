@@ -22,7 +22,10 @@ git push -u origin main
 
 ## TAHAPAN TUGAS-TUGAS
 
-** Buat Repository
-** Buat file .gitignore
-** Buat file README.MD
-** Clone Repo Dari Github
+**Buat Repository**
+
+**Buat file .gitignore**
+
+**Buat file README.MD**
+
+**Clone Repo Dari Github**
