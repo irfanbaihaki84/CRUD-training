@@ -9,9 +9,9 @@ const dbPool = mysql.createConnection({
   database: process.env.DB_NAME,
 });
 
-// dbPool.connect((err) => {
-//   if (err) throw err;
-//   console.log('Database connected!');
-// });
+dbPool.connect((err) => {
+  if (err) throw err;
+  console.log('Database connected!');
+});
 
 module.exports = dbPool;
