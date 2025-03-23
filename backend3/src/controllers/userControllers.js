@@ -24,10 +24,19 @@ const getToday = () => {
 const createUser = (req, res) => {
   const { username, password, role, nama_lengkap, email, no_telepon, alamat } =
     req.body;
-  const query = `INSERT INTO users (username, password, role, nama_lengkap, email, no_telepon, alamat, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ${getToday()})`;
+  const query = `INSERT INTO users (username, password, role, nama_lengkap, email, no_telepon, alamat, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
   db.query(
     query,
-    [username, password, role, nama_lengkap, email, no_telepon, alamat],
+    [
+      username,
+      password,
+      role,
+      nama_lengkap,
+      email,
+      no_telepon,
+      alamat,
+      getToday(),
+    ],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res
