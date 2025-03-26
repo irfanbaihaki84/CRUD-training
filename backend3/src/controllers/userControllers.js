@@ -22,19 +22,32 @@ const getToday = () => {
 
 // Create User
 const createUser = (req, res) => {
-  const { username, password, role, nama_lengkap, email, no_telepon, alamat } =
-    req.body;
+  const {
+    username,
+    password,
+    nama_lengkap,
+    gender,
+    nik,
+    no_telepon,
+    email,
+    alamat,
+    role,
+    photo,
+  } = req.body;
   const query = `INSERT INTO users (username, password, role, nama_lengkap, email, no_telepon, alamat, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
   db.query(
     query,
     [
       username,
       password,
-      role,
       nama_lengkap,
-      email,
+      gender,
+      nik,
       no_telepon,
+      email,
       alamat,
+      role,
+      photo,
       getToday(),
     ],
     (err, result) => {
@@ -68,18 +81,59 @@ const getOneUser = (req, res) => {
 // Update User
 const updateUser = (req, res) => {
   const { id } = req.params;
-  const { username, password, role, nama_lengkap, email, no_telepon, alamat } =
-    req.body;
-  const query =
-    'UPDATE users SET username = ?, password = ?, role = ?, nama_lengkap = ?, email = ?, no_telepon = ?, alamat = ? WHERE id = ?';
+  const {
+    username,
+    password,
+    nama_lengkap,
+    gender,
+    nik,
+    no_telepon,
+    email,
+    alamat,
+    role,
+    photo,
+  } = req.body;
+  const query = `UPDATE users SET username = ?, password = ?, nama_lengkap = ?, gender = ?, nik = ?, no_telepon = ?, email = ?, alamat = ?, role = ?, photo = ?, updated_at = ? WHERE id = ?`;
   db.query(
     query,
-    [username, password, role, nama_lengkap, email, no_telepon, alamat, id],
+    [
+      username,
+      password,
+      nama_lengkap,
+      gender,
+      nik,
+      no_telepon,
+      email,
+      alamat,
+      role,
+      photo,
+      getToday(),
+      id,
+    ],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.status(201).json({ message: 'User updated successfully' });
+      res
+        .status(201)
+        .json({ message: 'User updated successfully', data: result });
     }
   );
+};
+
+const partialUpdateUser = async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ error: 'No fields to update' });
+  }
+
+  const query = 'UPDATE users SET ? WHERE id = ?';
+  db.query(query, [updates, id], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (result.affectedRows === 0)
+      return res.status(404).json({ error: 'Pengiriman not found' });
+    res.json({ message: 'Pengiriman partially updated successfully' });
+  });
 };
 
 // Delete User
@@ -97,5 +151,6 @@ module.exports = {
   getUsers,
   getOneUser,
   updateUser,
+  partialUpdateUser,
   deleteUser,
 };
