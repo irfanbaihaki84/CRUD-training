@@ -1,17 +1,21 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 // KONEKSI KE DATABASE MYSQL
-const dbPool = mysql.createConnection({
+// const pool = mysql.createConnection({
+const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 });
+// waitForConnections: true,
+// connectionLimit: 10,
+// queueLimit: 0,
 
-dbPool.connect((err) => {
-  if (err) throw err;
-  console.log('Database connected!');
-});
+// pool.connect((err) => {
+//   if (err) throw err;
+//   console.log('Database connected!');
+// });
 
-module.exports = dbPool;
+module.exports = pool;

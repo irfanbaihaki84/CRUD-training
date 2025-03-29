@@ -1,14 +1,20 @@
 const express = require('express');
-const userController = require('../controllers/userControllers');
+const { authenticate, authorize } = require('../middleware/authenticate');
+const {
+  createUser,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+} = require('../controllers/userControllers');
 
 const router = express.Router();
 
-// CRUD Routes
-router.post('/', userController.createUser);
-router.get('/', userController.getUsers);
-router.get('/:id', userController.getOneUser);
-router.put('/:id', userController.updateUser);
-router.patch('/:id', userController.partialUpdateUser);
-router.delete('/:id', userController.deleteUser);
+// router.post('/', authenticate, authorize(['admin']), createUser);
+router.post('/', createUser);
+router.get('/', getAllUsers);
+router.get('/:id', getUserById);
+router.patch('/:id', authenticate, updateUser);
+router.delete('/:id', authenticate, authorize(['admin']), deleteUser);
 
 module.exports = router;

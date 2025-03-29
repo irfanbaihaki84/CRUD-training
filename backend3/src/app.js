@@ -1,6 +1,7 @@
 const express = require('express');
 // const dotenv = require('dotenv');
 const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes');
 const MiddlewareLogRequest = require('./middleware/logs');
 
 // dotenv.config();
@@ -12,7 +13,8 @@ app.use(express.json());
 // MIDDLEWARE
 app.use(MiddlewareLogRequest);
 
-app.use('/users', userRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 app.use('/', (req, res) => {
   res.send('SELAMAT DATANG.');
