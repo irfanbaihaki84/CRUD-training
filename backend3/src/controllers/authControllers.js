@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { generateToken, getToday } = require('../middleware/authenticate');
 
 // Validasi input

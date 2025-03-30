@@ -73,9 +73,17 @@ const getToday = () => {
   return newToday;
 };
 
+const validateInput = (input) => {
+  const forbiddenChars = /[\'"`|=+\/\\[\]{}()%$!&#*]/;
+  if (forbiddenChars.test(input)) {
+    throw new Error('Input contains invalid characters');
+  }
+};
+
 module.exports = {
   generateToken,
   authenticate,
   authorize,
   getToday,
+  validateInput,
 };
