@@ -3,16 +3,23 @@ import axios from 'axios';
 
 export default function UserList() {
   const [users, setUsers] = useState([]);
-  const [page, setPage] = useState(0);
-  const [limit, setLimit] = useState(10);
-  const [pages, setUPages] = useState(0);
-  const [rows, setURows] = useState(0);
-  const [Keyword, setKeyword] = useState('');
+  // const [page, setPage] = useState(0);
+  // const [limit, setLimit] = useState(10);
+  // const [pages, setUPages] = useState(0);
+  // const [rows, setURows] = useState(0);
+  // const [Keyword, setKeyword] = useState('');
 
   const getUser = async () => {
-    const response = await axios.get(`http://localhost:5000/api/users`);
-    setUsers(response.data.result);
+    const { data } = await axios.get(`http://localhost:5000/api/users`, {
+      header: { Authorization: `Bearer, ${data.token}` },
+    });
+    console.log(data);
+    setUsers(data.result);
   };
+
+  useEffect(() => {
+    getUser();
+  }, [users]);
 
   return (
     <div className="container">
@@ -28,19 +35,21 @@ export default function UserList() {
       <table>
         <thead>
           <tr>
-            <th>1</th>
-            <th>2</th>
-            <th>3</th>
-            <th>4</th>
+            <th>User Name</th>
+            <th>Gender</th>
+            <th>Email</th>
+            <th>Role</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>2</td>
-            <td>3</td>
-            <td>4</td>
-          </tr>
+          {users.map((user) => (
+            <tr key={user.id}>
+              <td>{user.username}</td>
+              <td>{user.gender}</td>
+              <td>{user.email}</td>
+              <td>{user.role}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

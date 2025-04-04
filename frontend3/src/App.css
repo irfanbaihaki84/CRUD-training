@@ -54,8 +54,12 @@ h2,
 h3 {
   text-align: center;
 }
+table {
+  width: 90%;
+}
 table,
 tr,
+th,
 td {
   border: 1px solid black;
 }

@@ -1,16 +1,30 @@
-import './App.css';
-import Signin from './components/Signin.jsx';
-import UserList from './components/UserList.jsx';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import SignIn from './components/Auth/SignIn';
+import SignUp from './components/Auth/SignUp';
+import AdminDashboard from './components/Dashboard/AdminDashboard';
+import PrivateRoute from './components/Auth/PrivateRoute';
 
 function App() {
   return (
-    <>
-      <div className="container">
-        <h2>SELAMAT DATANG DI USER INTERFACE.</h2>
-        <Signin />
-        <UserList />
-      </div>
-    </>
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <AdminDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route path="/" element={<SignIn />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 
