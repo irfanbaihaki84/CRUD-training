@@ -14,7 +14,7 @@ const Navbar = () => {
         {currentUser && (
           <>
             <Typography variant="subtitle1" sx={{ mr: 2 }}>
-              Welcome, {currentUser.email}
+              Welcome, {currentUser.user.email}
             </Typography>
             <Button color="inherit" onClick={logout}>
               Sign Out

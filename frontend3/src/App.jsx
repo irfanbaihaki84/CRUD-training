@@ -1,9 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import SignIn from './components/Auth/SignIn';
-import SignUp from './components/Auth/SignUp';
-import AdminDashboard from './components/Dashboard/AdminDashboard';
+import SignIn from './pages/SignIn';
+import SignUp from './pages/SignUp';
+import AdminDashboard from './pages/AdminDashboard';
 import PrivateRoute from './components/Auth/PrivateRoute';
 
 function App() {

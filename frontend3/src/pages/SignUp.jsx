@@ -8,7 +8,7 @@ import {
   Button,
   Link,
 } from '@mui/material';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -24,6 +24,7 @@ const SignUp = () => {
       await signup(email, password, name);
       navigate('/dashboard');
     } catch (err) {
+      console.log({ message: err });
       setError('Failed to create an account. Please try again.');
     }
   };

@@ -8,7 +8,7 @@ import {
   Button,
   Link,
 } from '@mui/material';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const SignIn = () => {
   const [username, setUserName] = useState('');

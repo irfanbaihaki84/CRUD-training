@@ -49,10 +49,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const user = auth.getCurrentUser();
     if (user) {
+      console.log('AuthContext', user);
       setCurrentUser(user);
     }
     setLoading(false);
-  }, []);
+  }, [setCurrentUser]);
 
   const value = {
     currentUser,

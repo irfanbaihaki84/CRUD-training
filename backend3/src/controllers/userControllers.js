@@ -242,11 +242,121 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// controllers/userController.js
+// const searchUsers = async (req, res) => {
+//   const { search } = req.query;
+//   console.log('search', search);
+
+//   try {
+//     let query =
+//       'SELECT id, username, email, role FROM users WHERE is_active = 1';
+//     const params = [];
+
+//     if (search) {
+//       query += ' AND (username LIKE ? OR email LIKE ?)';
+//       params.push(`%${search}%`, `%${search}%`);
+//     }
+
+//     if (role && role !== 'all') {
+//       query += ' AND role = ?';
+//       params.push(role);
+//     }
+
+//     const [users] = await pool.query(query, params);
+//     res.json(users);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// };
+
+// Helper function to build WHERE clause
+const buildWhereClause = (params) => {
+  let whereClause = 'WHERE 1=1';
+  const values = [];
+
+  if (params.search) {
+    whereClause += ` AND (username LIKE ? OR nama_lengkap LIKE ? OR email LIKE ?)`;
+    values.push(
+      `%${params.search}%`,
+      `%${params.search}%`,
+      `%${params.search}%`
+    );
+  }
+
+  if (params.role) {
+    whereClause += ` AND role = ?`;
+    values.push(params.role);
+  }
+
+  if (params.is_active !== undefined) {
+    whereClause += ` AND is_active = ?`;
+    values.push(params.is_active === 'true' ? 1 : 0);
+  }
+
+  console.log('buildWhereClause ', whereClause);
+  return { whereClause, values };
+};
+
+// Get all users with search, filter, and pagination
+const getAllUsers1 = async (req, res) => {
+  try {
+    // const { page = 1, limit = 10, search, role, is_active } = req.query;
+    const { search, role, is_active, page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Build WHERE clause
+    const { whereClause, values } = buildWhereClause({
+      search,
+      role,
+      is_active,
+    });
+    console.log('getAllUsers1 ', whereClause);
+
+    // Get total count
+    const [countRows] = await pool.query(
+      `SELECT COUNT(*) as total FROM users ${whereClause}`,
+      values
+    );
+    const total = countRows[0].total;
+
+    // Get paginated data
+    const [rows] = await pool.query(
+      `SELECT 
+        id, username, nama_lengkap, gender, nik, no_telepon, 
+        email, alamat, role, photo, is_active, created_at, updated_at
+       FROM users 
+       ${whereClause}
+       ORDER BY created_at DESC
+       LIMIT ? OFFSET ?`,
+      [...values, parseInt(limit), parseInt(offset)]
+    );
+
+    const totalPages = Math.ceil(total / limit);
+
+    res.json({
+      success: true,
+      data: rows,
+      pagination: {
+        totalItems: total,
+        totalPages,
+        currentPage: parseInt(page),
+        itemsPerPage: parseInt(limit),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 module.exports = {
   createUser,
   getAllUsers,
+  getAllUsers1,
   getUserById,
   updateUser,
   updatePassword,
   deleteUser,
+  // searchUsers,
 };
