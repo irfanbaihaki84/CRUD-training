@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const bcrypt = require('bcryptjs');
 const { logAction } = require('../middleware/log');
 const { getToday, validateInput } = require('../middleware/authenticate');
 
@@ -32,7 +33,7 @@ const buildWhereClause = (params) => {
 // Get all users with pagination, search, and filter
 exports.getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 5, search, role, is_active } = req.query;
+    const { page = 1, limit = 3, search, role, is_active } = req.query;
     const offset = (page - 1) * limit;
 
     // Build WHERE clause

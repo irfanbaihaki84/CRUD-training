@@ -112,10 +112,10 @@ exports.forgotPassword = async (req, res) => {
 
     const user = users[0];
     const resetToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
+      expiresIn: '300000',
     });
 
-    const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour
+    const resetTokenExpires = new Date(Date.now() + 420000); // 1 hour
 
     await pool.query(
       'UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
