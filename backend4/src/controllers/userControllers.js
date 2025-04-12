@@ -90,9 +90,6 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Other CRUD operations (create, update, delete) would follow similar patterns
-// with proper logging for each action
-
 // READ By ID - Admin atau user sendiri
 exports.getUserById = async (req, res) => {
   try {
@@ -127,102 +124,331 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// CREATE - Admin only
-exports.createUser = async (req, res) => {
-  const {
-    username,
-    password,
-    nama_lengkap,
-    email,
-    role = 'pelanggan',
-  } = req.body;
-
+// POST /api/users (Admin only)
+exports.createUserAdmin = async (req, res) => {
   try {
-    const [result] = await pool.query(`INSERT INTO users SET ?`, {
+    const {
       username,
       password,
       nama_lengkap,
+      gender,
+      nik,
+      no_telepon,
       email,
+      alamat,
       role,
-      is_active: 1,
-      created_at: getToday,
-      updated_at: getToday,
+      photo,
+      is_active,
+    } = req.body;
+
+    // Validasi required fields
+    if (!username || !password || !nama_lengkap || !email || !role) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields',
+      });
+    }
+
+    // Check uniqueness
+    const [existing] = await pool.query(
+      'SELECT id FROM users WHERE username = ? OR email = ?',
+      [username, email]
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username or email already exists',
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user
+    const [result] = await pool.query('INSERT INTO users SET ?', {
+      username,
+      password: hashedPassword,
+      nama_lengkap,
+      gender,
+      nik,
+      no_telepon,
+      email,
+      alamat,
+      role,
+      photo,
+      is_active,
+      created_at: new Date(),
+      updated_at: new Date(),
     });
 
     // Log action
     await logAction(
       req.user.id,
-      'create user',
+      'create',
       'users',
-      req.user.id,
-      null,
-      'username,password,nama_lengkap,email,role,is_active,created_at,updated_at'
+      result.insertId,
+      {
+        newValue: req.body,
+      },
+      req
     );
 
     res.status(201).json({
+      success: true,
       message: 'User created successfully',
       userId: result.insertId,
     });
-  } catch (err) {
-    console.error(err);
-    if (err.code === 'ER_DUP_ENTRY') {
-      return res
-        .status(400)
-        .json({ error: 'Username or email already exists' });
-    }
-    res.status(500).json({ error: 'Create user failed' });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
-// UPDATE - Admin atau user sendiri
-exports.updateUser = async (req, res) => {
-  const { id } = req.params;
-  const updates = req.body;
-  const allowedFields = [
-    'nama_lengkap',
-    'email',
-    'no_telepon',
-    'alamat',
-    'photo',
-  ];
-
+// PATCH /api/users/:id (Admin only)
+exports.partialUpdateUserAdmin = async (req, res) => {
   try {
-    // Jika bukan admin dan mencoba update user lain
-    if (req.user.role !== 'admin' && req.user.id !== parseInt(id)) {
-      return res.status(403).json({ error: 'Unauthorized access' });
+    const { id } = req.params;
+    const updateFields = req.body;
+
+    // Validasi input
+    const allowedFields = [
+      'nama_lengkap',
+      'gender',
+      'nik',
+      'no_telepon',
+      'email',
+      'alamat',
+      'role',
+      'photo',
+      'is_active',
+    ];
+
+    const isValidUpdate = Object.keys(updateFields).every((field) =>
+      allowedFields.includes(field)
+    );
+
+    if (!isValidUpdate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid update fields',
+      });
     }
 
-    // Filter field yang diizinkan
-    const validUpdates = {};
-    Object.keys(updates).forEach((key) => {
-      if (allowedFields.includes(key)) {
-        validUpdates[key] = updates[key];
+    // Check if user exists
+    const [user] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
+    if (user.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Email uniqueness check
+    if (updateFields.email && updateFields.email !== user[0].email) {
+      const [existing] = await pool.query(
+        'SELECT id FROM users WHERE email = ? AND id != ?',
+        [updateFields.email, id]
+      );
+      if (existing.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email already in use',
+        });
       }
-    });
-
-    if (Object.keys(validUpdates).length === 0) {
-      return res.status(400).json({ error: 'No valid fields to update' });
     }
 
-    // Tambahkan updated_at
-    validUpdates.updated_at = getToday();
+    // Update user
+    await pool.query('UPDATE users SET ? WHERE id = ?', [updateFields, id]);
 
-    const [result] = await pool.query('UPDATE users SET ? WHERE id = ?', [
-      validUpdates,
+    // Log action
+    await logAction(
+      req.user.id,
+      'update',
+      'users',
       id,
-    ]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+      {
+        oldValue: user[0],
+        newValue: { ...user[0], ...updateFields },
+      },
+      req
+    );
 
     res.json({
+      success: true,
       message: 'User updated successfully',
-      updatedFields: validUpdates,
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Update failed' });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
+// PATCH /api/users/profile (Karyawan/Pelanggan)
+exports.partialUpdateUser = async (req, res) => {
+  try {
+    const { id } = req.user; // ID dari token
+    const updateFields = req.body;
+
+    // Validasi input
+    const allowedFields = [
+      'nama_lengkap',
+      'gender',
+      'nik',
+      'no_telepon',
+      'email',
+      'alamat',
+      'photo',
+    ];
+
+    const isValidUpdate = Object.keys(updateFields).every((field) =>
+      allowedFields.includes(field)
+    );
+
+    if (!isValidUpdate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid update fields',
+      });
+    }
+
+    // Get current user data
+    const [user] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
+    if (user.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Email uniqueness check
+    if (updateFields.email && updateFields.email !== user[0].email) {
+      const [existing] = await pool.query(
+        'SELECT id FROM users WHERE email = ? AND id != ?',
+        [updateFields.email, id]
+      );
+      if (existing.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email already in use',
+        });
+      }
+    }
+
+    // Update user
+    await pool.query('UPDATE users SET ? WHERE id = ?', [updateFields, id]);
+
+    // Log action
+    await logAction(
+      id,
+      'update_profile',
+      'users',
+      id,
+      {
+        oldValue: user[0],
+        newValue: { ...user[0], ...updateFields },
+      },
+      req
+    );
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
+// POST /api/users/register (Karyawan/Pelanggan)
+exports.createUser = async (req, res) => {
+  try {
+    const {
+      username,
+      password,
+      nama_lengkap,
+      gender,
+      nik,
+      no_telepon,
+      email,
+      alamat,
+      photo,
+    } = req.body;
+
+    // Validasi required fields
+    if (!username || !password || !nama_lengkap || !email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields',
+      });
+    }
+
+    // Check uniqueness
+    const [existing] = await pool.query(
+      'SELECT id FROM users WHERE username = ? OR email = ?',
+      [username, email]
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username or email already exists',
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user (default role pelanggan)
+    const [result] = await pool.query('INSERT INTO users SET ?', {
+      username,
+      password: hashedPassword,
+      nama_lengkap,
+      gender,
+      nik,
+      no_telepon,
+      email,
+      alamat,
+      role: 'pelanggan', // Default role
+      photo,
+      is_active: true, // Default active
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    // Log action
+    await logAction(
+      result.insertId,
+      'register',
+      'users',
+      result.insertId,
+      {
+        newValue: req.body,
+      },
+      req
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      userId: result.insertId,
+    });
+  } catch (error) {
+    console.error('Error registering user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
   }
 };
 
