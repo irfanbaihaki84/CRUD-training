@@ -10,6 +10,7 @@ const app = express();
 
 // Middleware
 app.use(cors());
+// Untuk parsing JSON body
 app.use(express.json());
 // app.use(morgan('dev'));
 

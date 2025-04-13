@@ -208,11 +208,20 @@ exports.createUserAdmin = async (req, res) => {
   }
 };
 
-// PATCH /api/users/:id (Admin only)
+// PATCH /api/users/adm/:id (Admin only)
 exports.partialUpdateUserAdmin = async (req, res) => {
+  // console.log(req.body);
   try {
     const { id } = req.params;
-    const updateFields = req.body;
+    const updateFields = req.body || {};
+
+    // Validasi updateFields tidak kosong
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No fields to update',
+      });
+    }
 
     // Validasi input
     const allowedFields = [
@@ -227,14 +236,16 @@ exports.partialUpdateUserAdmin = async (req, res) => {
       'is_active',
     ];
 
-    const isValidUpdate = Object.keys(updateFields).every((field) =>
-      allowedFields.includes(field)
+    // Filter field yang diizinkan
+    const isValidUpdate = Object.keys(updateFields).every(
+      (field) => !allowedFields.includes(field)
     );
 
-    if (!isValidUpdate) {
+    if (isValidUpdate.length > 0) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid update fields',
+        message: `Invalid fields: ${isValidUpdate.join(', ')}`,
+        allowedFields,
       });
     }
 
